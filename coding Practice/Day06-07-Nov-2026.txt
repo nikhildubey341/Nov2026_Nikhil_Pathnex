@@ -1,0 +1,74 @@
+# Day 06 - Introduction to CloudFormation and Kubernetes Advanced Concepts
+
+# Ansible - Install Docker
+
+- name: Install Docker                          # name (play) = a label for the whole job
+  hosts: all                                    # hosts: all = run on every server in the inventory file
+  become: yes                                   # become: yes = run as admin (sudo)
+  tasks:                                        # tasks = the list of steps to run in order
+    - name: Install Docker                      # name (task) = a label for one step
+      yum:                                      # yum = package manager used to install software
+        name: docker                            # name (module) = the package to install
+        state: present                          # state: present = make sure it is installed
+    - name: Start Docker
+      service:                                  # service = module that controls background services
+        name: docker                            # name (service module) = the service to manage
+        state: started                          # state: started = make sure the service is running now
+        enabled: yes                            # enabled: yes = start the service automatically after reboot
+
+        
+# Terraform - Provisioning EC2 with VPC
+resource "aws_vpc" "main" {                     # resource = a thing Terraform creates (type + my own nickname)
+  cidr_block = "10.0.0.0/16"                    # cidr_block = the IP address range of the network
+}
+
+resource "aws_instance" "pathnex_ec2" {
+  ami           = "ami-0abcd1234abcd1234"       # ami = the OS image used to create the server
+  instance_type = "t3.medium"                   # instance_type = the size of the server (CPU and RAM)
+  subnet_id     = aws_subnet.main.id            # subnet_id = the subnet the server is placed in
+  tags = {                                      # tags = labels used to find and organise the server
+    Name = "Pathnex-EC2"                        # Name = the name shown in the AWS console
+  }
+}
+# Kubernetes — Pod with Volume Mount
+apiVersion: v1                                  # apiVersion = which Kubernetes API version this object uses
+kind: Pod                                       # kind = the type of object to create
+metadata:                                       # metadata = information that identifies this object
+  name: pathnex-pod                             # name (Kubernetes) = the name of this object
+spec:                                           # spec = the desired setup of this object
+  containers:                                   # containers = the list of containers inside the pod
+    - name: web                                 # name (container) = the name of the container inside the pod
+      image: nginx                              # image = the Docker image to run
+      volumeMounts:                             # volumeMounts = where a volume is attached inside the container
+        - mountPath: /usr/share/nginx/html      # mountPath = the folder inside the container where the volume appears
+          name: html-volume                     # name (volume mount) = the volume to attach
+  volumes:                                      # volumes = the list of storage volumes for the pod
+    - name: html-volume                         # name (volume) = the name of the volume
+      hostPath:                                 # hostPath = uses a folder from the host machine
+        path: /data                             # path (hostPath) = the folder on the host machine
+        type: Directory                         # type = what the path must be (Directory = a folder)
+# Shell Script — Check for Running Services
+#!/bin/bash
+services=("nginx" "docker" "httpd")             # services=( ) = a list (array) of values
+for service in "${services[@]}"                 # for = repeats the steps for each item in the list | "${services[@]}" = all items in the list
+do                                              # do = start of the loop steps
+  if systemctl is-active --quiet $service; then # if = checks a condition | systemctl is-active = checks if a service is running | --quiet = no output | $service = the current item
+    echo "$service is running"                  # echo = prints the given text on the screen
+  else                                          # else = runs when the condition is false
+    echo "$service is not running"
+  fi                                            # fi = ends the if
+done                                            # done = ends the loop
+
+
+# Docker
+# Node.js Application (JavaScript)
+console.log("Hello Nikhil");                   # console.log = shows the given text on the screen
+
+# Docker File
+FROM node:18                                    # FROM = the base image to start from | node:18 = the Node.js image, version 18
+WORKDIR /opt/pathnex/node-app                   # WORKDIR = sets the working folder inside the image
+COPY app.js /opt/pathnex/node-app/              # COPY = copies a file from my computer into the image
+CMD ["node", "/opt/pathnex/node-app/app.js"]    # CMD = the default command that runs when the container starts | node = runs a JavaScript file
+
+# Real Path
+/opt/pathnex/node-app                           # /opt/pathnex/node-app = the folder where the app lives
